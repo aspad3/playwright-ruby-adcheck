@@ -1,7 +1,7 @@
 require "playwright"
 require "fileutils"
 
-URL = ENV.fetch("TARGET_URL", "https://example.com")
+URL = ENV.fetch("TARGET_URL", "https://ameriquestlife.blogspot.com/")
 OUTPUT_DIR = "artifacts"
 FileUtils.mkdir_p(OUTPUT_DIR)
 

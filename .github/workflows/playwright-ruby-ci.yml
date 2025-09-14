@@ -1,6 +1,9 @@
 name: Playwright Ruby Headless (Ad Check)
 
 on:
+  schedule:
+    - cron: '0 6,18 * * *'  # Menjadwalkan untuk berjalan pada pukul 6 pagi dan 6 malam
+  workflow_dispatch:  # Untuk menjalankan secara manual jika diperlukan
   push:
   pull_request:
 
