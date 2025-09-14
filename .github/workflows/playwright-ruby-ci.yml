@@ -2,8 +2,8 @@ name: Playwright Ruby Headless (Ad Check)
 
 on:
   schedule:
-    - cron: '0 6,18 * * *'  # Menjadwalkan untuk berjalan pada pukul 6 pagi dan 6 malam
-  workflow_dispatch:  # Untuk menjalankan secara manual jika diperlukan
+    - cron: '0 6,18 * * *'  # Run pukul 6 pagi dan 6 malam
+  workflow_dispatch:         # Bisa dijalankan manual
   push:
   pull_request:
 
@@ -24,6 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "npm"
 
       - name: Install Ruby dependencies
         run: |
@@ -31,24 +32,39 @@ jobs:
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
+
       - name: Install Playwright Node dependency
-        run: |
-          npm install -D playwright
+        run: npm install -D playwright
 
       - name: Install Playwright browsers (with deps)
-        run: |
-          npx playwright install --with-deps
+        run: npx playwright install --with-deps
 
       - name: Create artifacts folder
         run: mkdir -p artifacts
 
+      - name: Check Environment Variables
+        run: |
+          echo "---- Environment Check ----"
+          ruby -v
+          which ruby
+          gem list bundler
+          bundle list
+          node -v
+          npm -v
+          npx playwright --version
+          echo "TARGET_URL: $TARGET_URL"
+          echo "PROXY: $PROXY"
+          echo "USER_AGENT: $USER_AGENT"
+          echo "PATH: $PATH"
+          echo "---------------------------"
+
       - name: Run Playwright Ruby script
         env:
-          TARGET_URL: https://example.com
-          # PROXY: http://user:pass@proxyhost:port
+          TARGET_URL: ${{ secrets.TARGET_URL }}
+          PROXY: ${{ secrets.PROXY }}
+          NODE_OPTIONS: "--max-old-space-size=4096"
           # USER_AGENT: "Custom-UA-if-needed"
-        run: |
-          ruby script/playwright_headless_ad_check.rb
+        run: bundle exec ruby script/playwright_headless_ad_check.rb
 
       - name: Upload artifacts (screenshots, html, logs)
         uses: actions/upload-artifact@v4
