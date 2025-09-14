@@ -1,0 +1,54 @@
+name: Playwright Ruby Headless (Ad Check)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run-playwright:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+
+      - name: Set up Node (for Playwright CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Ruby dependencies
+        run: |
+          gem install bundler
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Install Playwright Node dependency
+        run: |
+          npm install -D playwright
+
+      - name: Install Playwright browsers (with deps)
+        run: |
+          npx playwright install --with-deps
+
+      - name: Create artifacts folder
+        run: mkdir -p artifacts
+
+      - name: Run Playwright Ruby script
+        env:
+          TARGET_URL: https://example.com
+          # PROXY: http://user:pass@proxyhost:port
+          # USER_AGENT: "Custom-UA-if-needed"
+        run: |
+          ruby script/playwright_headless_ad_check.rb
+
+      - name: Upload artifacts (screenshots, html, logs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: artifacts
