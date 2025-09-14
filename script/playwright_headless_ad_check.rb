@@ -52,7 +52,7 @@ Playwright.create(playwright_cli_executable_path: "./node_modules/.bin/playwrigh
     puts "⚠️ No response received from page"
   end
 
-  wait_seconds 6
+  wait_seconds 15
   page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
   wait_seconds 4
   page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
