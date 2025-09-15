@@ -30,7 +30,7 @@ def send_browserless_request
   # Prepare the query and interpolate the URL directly into the string
   query = "mutation FormExample { 
                 goto(url: \"#{URL}\", timeout: 30000) { status } 
-                scroll(selector: \"body\", timeout: 30000, visible: true, wait: true, x: 0, y: 1000) { x y } 
+                scroll(selector: \"body\", timeout: 50000, visible: true, wait: true, x: 0, y: 1000) { x y } 
                 verify(type: cloudflare, timeout: 30000) { solved } 
               }"
 
