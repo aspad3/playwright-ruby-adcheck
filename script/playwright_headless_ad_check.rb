@@ -1,13 +1,17 @@
 require 'curb'
 require 'json'
 require 'fileutils'
+require 'dotenv'
+
+# ---------------- Load .env ----------------
+Dotenv.load
 
 # ---------------- Configuration ----------------
-URL = ENV.fetch("TARGET_URL", nil)
+URL = ENV['TARGET_URL']
 OUTPUT_DIR = "artifacts"
 FileUtils.mkdir_p(OUTPUT_DIR)
 
-BROWSERLESS_TOKEN = ENV.fetch("BROWSERLESS_API_TOKEN", nil)
+BROWSERLESS_TOKEN = ENV['BROWSERLESS_API_TOKEN']
 raise "Please set BROWSERLESS_API_TOKEN" if BROWSERLESS_TOKEN.empty?
 
 USER_AGENT = ENV.fetch(
