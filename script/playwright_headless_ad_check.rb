@@ -1,79 +1,71 @@
-require "playwright"
-require "fileutils"
+require 'curb'
+require 'json'
+require 'fileutils'
 
-URL = ENV.fetch("TARGET_URL", "https://ameriquestlife.blogspot.com/")
+# ---------------- Configuration ----------------
+URL = ENV.fetch("TARGET_URL", nil)
 OUTPUT_DIR = "artifacts"
 FileUtils.mkdir_p(OUTPUT_DIR)
 
-proxy_server = ENV["PROXY"] # optional: "http://user:pass@host:port"
-user_agent = ENV.fetch(
+BROWSERLESS_TOKEN = ENV.fetch("BROWSERLESS_API_TOKEN", nil)
+raise "Please set BROWSERLESS_API_TOKEN" if BROWSERLESS_TOKEN.empty?
+
+USER_AGENT = ENV.fetch(
   "USER_AGENT",
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 )
 
+# ---------------- Helpers ----------------
 def wait_seconds(n)
   puts "⏳ Waiting #{n} second(s)..."
   sleep n
 end
 
-Playwright.create(playwright_cli_executable_path: "./node_modules/.bin/playwright") do |playwright|
-  launch_options = { headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] }
-  launch_options[:proxy] = { server: proxy_server } if proxy_server && !proxy_server.empty?
+# ---------------- Main ----------------
+def send_browserless_request
+  # Prepare the query and interpolate the URL directly into the string
+  query = "mutation FormExample { 
+                goto(url: \"#{URL}\", timeout: 30000) { status } 
+                scroll(selector: \"body\", timeout: 30000, visible: true, wait: true, x: 0, y: 1000) { x y } 
+                verify(type: cloudflare, timeout: 30000) { solved } 
+              }"
 
-  browser = playwright.chromium.launch(**launch_options)
+  # Print the query before sending
+  puts "📝 Query to be sent: #{query}"
 
-  context = browser.new_context(
-    userAgent: user_agent,
-    viewport: { width: 1280, height: 800 },
-    javaScriptEnabled: true,
-    acceptDownloads: true
-  )
+  # Prepare the payload with the interpolated query
+  payload = {
+    query: query,
+    variables: {},
+    operationName: 'FormExample'
+  }
 
-  # Anti-detection tweaks
-  context.add_init_script(script: <<~JS)
-    Object.defineProperty(navigator, 'webdriver', { get: () => false });
-    Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3] });
-    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-    const originalQuery = window.navigator.permissions.query;
-    window.navigator.permissions.query = (parameters) =>
-      parameters.name === 'notifications'
-        ? Promise.resolve({ state: Notification.permission })
-        : originalQuery(parameters);
-  JS
-
-
-  page = context.new_page
-  puts "🌐 Navigating to #{URL} ..."
-  response = page.goto(URL, waitUntil: "networkidle")
-
-  if response
-    puts "✅ Page loaded with status #{response.status}"
-  else
-    puts "⚠️ No response received from page"
+  # Send the POST request using curl
+  response = Curl.post("https://production-sfo.browserless.io/chrome/bql?token=#{BROWSERLESS_TOKEN}&proxy=residential&blockConsentModals=true", payload.to_json) do |curl|
+    curl.headers = {
+      'Content-Type' => 'application/json',
+      'User-Agent' => USER_AGENT
+    }
+    curl.timeout = 300  # Set the timeout for the request (both connection + transfer)
   end
 
-  wait_seconds 15
-  page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
-  wait_seconds 4
-  page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-  wait_seconds 4
+  # Parse and print the response
+  response_data = JSON.parse(response.body_str)
+  puts "Response: #{response_data}"
 
-  html = page.content
-  File.write(File.join(OUTPUT_DIR, "page.html"), html)
-  puts "💾 Saved page HTML to #{OUTPUT_DIR}/page.html"
-
-  screenshot_path = File.join(OUTPUT_DIR, "screenshot.png")
-  page.screenshot(path: screenshot_path, fullPage: true)
-  puts "📸 Saved screenshot to #{screenshot_path}"
-
-  console_logs = []
-  page.on("console", ->(msg) { console_logs << "#{msg.type}: #{msg.text}" })
-
-  wait_seconds 2
-  File.write(File.join(OUTPUT_DIR, "console.log"), console_logs.join("\n"))
-  puts "📝 Saved console logs to #{OUTPUT_DIR}/console.log"
-
-  browser.close
+  # Save response to file
+  save_response_to_file(response_data)
 end
+
+# ---------------- Save Outputs ----------------
+def save_response_to_file(response_data)
+  # Save the response to an output file
+  response_path = File.join(OUTPUT_DIR, "response.json")
+  File.write(response_path, JSON.pretty_generate(response_data))
+  puts "💾 Saved response to #{response_path}"
+end
+
+# Run the request
+send_browserless_request
 
 puts "🎉 Done."
