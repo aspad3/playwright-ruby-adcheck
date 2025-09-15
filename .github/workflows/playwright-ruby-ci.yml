@@ -2,10 +2,14 @@ name: Playwright Ruby Headless (Ad Check)
 
 on:
   schedule:
-    - cron: '0 6,18 * * *'  # Run pukul 6 pagi dan 6 malam
-  workflow_dispatch:         # Bisa dijalankan manual
+    - cron: '0 * * * *'  # Run at the top of every hour
+  workflow_dispatch:         # Can be manually triggered
   push:
+    branches:
+      - main  # Run on push to the main branch (or specify other branches as needed)
   pull_request:
+    branches:
+      - main  # Run on pull request to the main branch (or specify other branches as needed)
 
 jobs:
   run-playwright:
@@ -20,6 +24,11 @@ jobs:
         with:
           ruby-version: 3.3
 
+      - name: Install dependencies (libcurl, build tools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev build-essential
+
       - name: Set up Node (for Playwright CLI)
         uses: actions/setup-node@v4
         with:
@@ -31,7 +40,7 @@ jobs:
           gem install bundler
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
-
+          gem install curb  # Ensure curb is installed if your script depends on it
 
       - name: Install Playwright Node dependency
         run: npm install -D playwright
@@ -61,9 +70,10 @@ jobs:
       - name: Run Playwright Ruby script
         env:
           TARGET_URL: ${{ secrets.TARGET_URL }}
+          BROWSERLESS_API_TOKEN: ${{ secrets.BROWSERLESS_API_TOKEN }}
           PROXY: ${{ secrets.PROXY }}
           NODE_OPTIONS: "--max-old-space-size=4096"
-          # USER_AGENT: "Custom-UA-if-needed"
+          USER_AGENT: ${{ secrets.USER_AGENT }}  # Uncomment if USER_AGENT is needed
         run: bundle exec ruby script/playwright_headless_ad_check.rb
 
       - name: Upload artifacts (screenshots, html, logs)
