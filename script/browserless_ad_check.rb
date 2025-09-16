@@ -22,7 +22,6 @@ class BrowserlessAdCheck
     # Validate environment variables
     raise "Please set BROWSERLESS_API_TOKEN in the .env file" if @browserless_token.to_s.strip.empty?
     raise "Please set DOMAIN_URL in the .env file" if @domain_url.to_s.strip.empty?
-    raise "Please set TARGET_URL in the .env file" if @target_url.to_s.strip.empty?
 
     # Create the output directory if it doesn't exist
     FileUtils.mkdir_p(OUTPUT_DIR)
