@@ -3,10 +3,8 @@ require 'json'
 require 'fileutils'
 require 'nokogiri'
 require 'uri'
-require 'dotenv'
 
 OUTPUT_DIR = "artifacts"
-Dotenv.load
 
 # Load environment variables directly from ENV (no need for Dotenv)
 domain_url = ENV['DOMAIN_URL']
@@ -17,9 +15,19 @@ user_agent = ENV.fetch(
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 )
 
+# Log all environment variables at the start
+puts "---- Environment Variables ----"
+puts "DOMAIN_URL: #{domain_url}"
+puts "TARGET_URL: #{target_url}"
+puts "BROWSERLESS_API_TOKEN: #{browserless_token.to_s.empty? ? 'Not Set' : 'Set'}"
+puts "USER_AGENT: #{user_agent}"
+puts "-------------------------------"
+
 # Validate environment variables
-raise "Please set BROWSERLESS_API_TOKEN in the environment" if browserless_token.to_s.strip.empty?
-raise "Please set DOMAIN_URL in the environment" if domain_url.to_s.strip.empty?
+if browserless_token.to_s.strip.empty? || domain_url.to_s.strip.empty?
+  puts "❌ Missing required environment variables. Exiting..."
+  exit
+end
 
 # Create the output directory if it doesn't exist
 FileUtils.mkdir_p(OUTPUT_DIR)
