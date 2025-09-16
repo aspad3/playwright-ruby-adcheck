@@ -24,9 +24,9 @@ jobs:
         with:
           ruby-version: 3.3
         
-      # Cache Ruby gems to avoid re-installation every time
+      # Cache Ruby gems to avoid re-installation every time (Updated to v3)
       - name: Cache Ruby gems
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-ruby-${{ hashFiles('**/Gemfile.lock') }}
