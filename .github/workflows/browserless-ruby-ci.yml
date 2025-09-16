@@ -16,29 +16,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # Setup Ruby and Cache Dependencies
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.3
+          bundler-cache: true  # This enables caching for bundler dependencies
 
-      - name: Install dependencies (libcurl, build tools)
+      # Install system dependencies (curl, build-essential)
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev build-essential
 
+      # Install Ruby dependencies
       - name: Install Ruby dependencies
         run: |
-          gem install bundler
-          bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
-          gem install curb  # Ensure curb is installed if your script depends on it
 
+      # Create artifacts folder
       - name: Create artifacts folder
         run: mkdir -p artifacts
 
+      # Check Environment Variables
       - name: Check Environment Variables
         run: |
           echo "---- Environment Check ----"
@@ -51,6 +55,7 @@ jobs:
           echo "USER_AGENT: $USER_AGENT"
           echo "---------------------------"
 
+      # Run Browserless Ruby script
       - name: Run Browserless Ruby script
         env:
           TARGET_URL: ${{ secrets.TARGET_URL }}
@@ -58,6 +63,7 @@ jobs:
           USER_AGENT: ${{ secrets.USER_AGENT }}  # Uncomment if USER_AGENT is needed
         run: bundle exec ruby script/browserless_ad_check.rb
 
+      # Upload artifacts (response.json)
       - name: Upload artifacts (response.json)
         uses: actions/upload-artifact@v4
         with:
