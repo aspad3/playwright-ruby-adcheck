@@ -1,16 +1,8 @@
-require 'curb'
-require 'json'
-require 'fileutils'
-require 'dotenv'
-require 'nokogiri'
-require 'uri'
-
 class BrowserlessAdCheck
   OUTPUT_DIR = "artifacts"
 
   def initialize
-    # Load environment variables
-    Dotenv.load
+    # Load environment variables directly from ENV (no need for Dotenv)
     @domain_url = ENV['DOMAIN_URL']
     @target_url = ENV['TARGET_URL']
     @browserless_token = ENV['BROWSERLESS_API_TOKEN']
@@ -18,10 +10,10 @@ class BrowserlessAdCheck
       "USER_AGENT",
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     )
-    
+
     # Validate environment variables
-    raise "Please set BROWSERLESS_API_TOKEN in the .env file" if @browserless_token.to_s.strip.empty?
-    raise "Please set DOMAIN_URL in the .env file" if @domain_url.to_s.strip.empty?
+    raise "Please set BROWSERLESS_API_TOKEN in the environment" if @browserless_token.to_s.strip.empty?
+    raise "Please set DOMAIN_URL in the environment" if @domain_url.to_s.strip.empty?
 
     # Create the output directory if it doesn't exist
     FileUtils.mkdir_p(OUTPUT_DIR)
