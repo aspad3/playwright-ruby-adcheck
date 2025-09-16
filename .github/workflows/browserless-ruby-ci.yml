@@ -27,11 +27,11 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true  # This enables caching for bundler dependencies
 
-      # Install system dependencies (curl, build-essential, libcurl)
+      # Install system dependencies (curl, build-essential, libcurl, pkg-config)
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev build-essential
+          sudo apt-get install -y libcurl4-openssl-dev build-essential pkg-config
 
       # Install Ruby dependencies
       - name: Install Ruby dependencies
