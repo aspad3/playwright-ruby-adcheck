@@ -24,18 +24,27 @@ jobs:
         with:
           ruby-version: 3.3
         
-      # Install necessary dependencies (libcurl, build tools)
+      # Cache Ruby gems to avoid re-installation every time
+      - name: Cache Ruby gems
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-ruby-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-ruby-
+        
+      # Install necessary dependencies (libcurl, build tools) only if not already cached
       - name: Install dependencies (libcurl, build tools)
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev build-essential
         
-      # Install Ruby dependencies
+      # Install Ruby dependencies only if needed (uses cache from the previous step)
       - name: Install Ruby dependencies
         run: |
           gem install bundler
           bundle config set --local path 'vendor/bundle'
-          bundle install --jobs 4 --retry 3
+          bundle install --jobs 4 --retry 3 || bundle install --jobs 4 --retry 3
           gem install curb # Ensure curb is installed if your script depends on it
         
       # Create artifacts folder
