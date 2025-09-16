@@ -1,3 +1,5 @@
+name: Run Browserless Script
+
 on:
   schedule:
     - cron: '0 * * * *' # Run at the top of every hour
@@ -17,6 +19,25 @@ jobs:
       # Checkout the repository
       - name: Checkout repo
         uses: actions/checkout@v4
+        
+      # Check if DOMAIN_URL is set and fail if not
+      - name: Fail if DOMAIN_URL is missing
+        run: |
+          if [ -z "${{ secrets.DOMAIN_URL }}" ]; then
+            echo "DOMAIN_URL is not set or is empty!"
+            exit 1
+          fi
+          echo "DOMAIN_URL is set."
+        
+      # Check environment variables first (debugging purpose)
+      - name: Check Environment Variables
+        run: |
+          echo "---- Environment Check ----"
+          echo "TARGET_URL: ${{ secrets.TARGET_URL }}"
+          echo "BROWSERLESS_API_TOKEN: ${{ secrets.BROWSERLESS_API_TOKEN }}"
+          echo "USER_AGENT: ${{ secrets.USER_AGENT }}"
+          echo "DOMAIN_URL: ${{ secrets.DOMAIN_URL }}"
+          echo "---------------------------"
         
       # Set up Ruby environment
       - name: Set up Ruby
@@ -50,19 +71,6 @@ jobs:
       # Create artifacts folder
       - name: Create artifacts folder
         run: mkdir -p artifacts
-        
-      # Check environment variables
-      - name: Check Environment Variables
-        run: |
-          echo "---- Environment Check ----"
-          ruby -v
-          which ruby
-          gem list bundler
-          bundle list
-          echo "TARGET_URL: $TARGET_URL"
-          echo "BROWSERLESS_API_TOKEN: $BROWSERLESS_API_TOKEN"
-          echo "USER_AGENT: $USER_AGENT"
-          echo "---------------------------"
         
       # Run Browserless Ruby script
       - name: Run Browserless Ruby script
