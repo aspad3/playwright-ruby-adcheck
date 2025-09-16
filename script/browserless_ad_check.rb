@@ -25,6 +25,8 @@ class BrowserlessAdCheck
 
   def run
     url = @target_url.nil? ? fetch_sitemap_url : @target_url
+    puts "INSPECT URL #{url.inspect}"
+    url = url.nil? ? ENV['DOMAIN_URL'] : url
     send_browserless_request(url)
     puts "🎉 Done."
   end
