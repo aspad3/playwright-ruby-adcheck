@@ -19,29 +19,28 @@ USER_AGENT = ENV.fetch(
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 )
 
-# ---------------- Helpers ----------------
-def wait_seconds(n)
-  puts "⏳ Waiting #{n} second(s)..."
-  sleep n
-end
-
 # ---------------- Main ----------------
 def send_browserless_request
-  # Prepare the query and interpolate the URL directly into the string
-  query = "mutation FormExample { 
-                goto(url: \"#{URL}\", timeout: 50000) { status } 
-                scroll(selector: \"body\", timeout: 50000, visible: true, wait: true, x: 0, y: 1000) { x y } 
-                verify(type: cloudflare, timeout: 50000) { solved } 
+  # Prepare the query for the mutation
+  query = "mutation ClickBody { 
+                goto(
+                  url: \"#{URL}\", 
+                  waitUntil: firstContentfulPaint, 
+                  timeout: 60000
+                ) { status }
+                
+                clickBody: click(
+                  selector: \"body\",
+                  timeout: 60000,
+                  visible: true
+                ) { selector x y time }
               }"
-
-  # Print the query before sending
-  puts "📝 Query to be sent: #{query}"
 
   # Prepare the payload with the interpolated query
   payload = {
     query: query,
     variables: {},
-    operationName: 'FormExample'
+    operationName: 'ClickBody'
   }
 
   # Send the POST request using curl

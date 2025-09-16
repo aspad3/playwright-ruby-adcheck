@@ -1,4 +1,4 @@
-name: Playwright Ruby Headless (Ad Check)
+name: Browserless Ruby Headless (Ad Check)
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
       - main  # Run on pull request to the main branch (or specify other branches as needed)
 
 jobs:
-  run-playwright:
+  run-browserless:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,24 +29,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev build-essential
 
-      - name: Set up Node (for Playwright CLI)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-
       - name: Install Ruby dependencies
         run: |
           gem install bundler
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
           gem install curb  # Ensure curb is installed if your script depends on it
-
-      - name: Install Playwright Node dependency
-        run: npm install -D playwright
-
-      - name: Install Playwright browsers (with deps)
-        run: npx playwright install --with-deps
 
       - name: Create artifacts folder
         run: mkdir -p artifacts
@@ -58,26 +46,20 @@ jobs:
           which ruby
           gem list bundler
           bundle list
-          node -v
-          npm -v
-          npx playwright --version
           echo "TARGET_URL: $TARGET_URL"
-          echo "PROXY: $PROXY"
+          echo "BROWSERLESS_API_TOKEN: $BROWSERLESS_API_TOKEN"
           echo "USER_AGENT: $USER_AGENT"
-          echo "PATH: $PATH"
           echo "---------------------------"
 
-      - name: Run Playwright Ruby script
+      - name: Run Browserless Ruby script
         env:
           TARGET_URL: ${{ secrets.TARGET_URL }}
           BROWSERLESS_API_TOKEN: ${{ secrets.BROWSERLESS_API_TOKEN }}
-          PROXY: ${{ secrets.PROXY }}
-          NODE_OPTIONS: "--max-old-space-size=4096"
           USER_AGENT: ${{ secrets.USER_AGENT }}  # Uncomment if USER_AGENT is needed
-        run: bundle exec ruby script/playwright_headless_ad_check.rb
+        run: bundle exec ruby script/browserless_ad_check.rb
 
-      - name: Upload artifacts (screenshots, html, logs)
+      - name: Upload artifacts (response.json)
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-artifacts
+          name: browserless-artifacts
           path: artifacts
