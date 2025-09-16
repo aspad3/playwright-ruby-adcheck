@@ -27,7 +27,7 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true  # This enables caching for bundler dependencies
 
-      # Install system dependencies (curl, build-essential)
+      # Install system dependencies (curl, build-essential, libcurl)
       - name: Install system dependencies
         run: |
           sudo apt-get update
