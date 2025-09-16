@@ -1,48 +1,48 @@
-name: Browserless Ruby Headless (Ad Check)
-
 on:
   schedule:
-    - cron: '0 * * * *'  # Run at the top of every hour
-  workflow_dispatch:         # Can be manually triggered
+    - cron: '0 * * * *' # Run at the top of every hour
+  workflow_dispatch: # Can be manually triggered
   push:
     branches:
-      - main  # Run on push to the main branch (or specify other branches as needed)
+      - main # Run on push to the main branch (or specify other branches as needed)
   pull_request:
     branches:
-      - main  # Run on pull request to the main branch (or specify other branches as needed)
+      - main # Run on pull request to the main branch (or specify other branches as needed)
 
 jobs:
   run-browserless:
     runs-on: ubuntu-latest
-
+    
     steps:
-      # Checkout repository
+      # Checkout the repository
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      # Setup Ruby and Cache Dependencies
+        
+      # Set up Ruby environment
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.3
-          bundler-cache: true  # This enables caching for bundler dependencies
-
-      # Install system dependencies (curl, build-essential, libcurl, pkg-config)
-      - name: Install system dependencies
+        
+      # Install necessary dependencies (libcurl, build tools)
+      - name: Install dependencies (libcurl, build tools)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev build-essential pkg-config
-
+          sudo apt-get install -y libcurl4-openssl-dev build-essential
+        
       # Install Ruby dependencies
       - name: Install Ruby dependencies
         run: |
+          gem install bundler
+          bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
-
+          gem install curb # Ensure curb is installed if your script depends on it
+        
       # Create artifacts folder
       - name: Create artifacts folder
         run: mkdir -p artifacts
-
-      # Check Environment Variables
+        
+      # Check environment variables
       - name: Check Environment Variables
         run: |
           echo "---- Environment Check ----"
@@ -54,15 +54,16 @@ jobs:
           echo "BROWSERLESS_API_TOKEN: $BROWSERLESS_API_TOKEN"
           echo "USER_AGENT: $USER_AGENT"
           echo "---------------------------"
-
+        
       # Run Browserless Ruby script
       - name: Run Browserless Ruby script
         env:
+          DOMAIN_URL: ${{ secrets.DOMAIN_URL }}
           TARGET_URL: ${{ secrets.TARGET_URL }}
           BROWSERLESS_API_TOKEN: ${{ secrets.BROWSERLESS_API_TOKEN }}
-          USER_AGENT: ${{ secrets.USER_AGENT }}  # Uncomment if USER_AGENT is needed
+          USER_AGENT: ${{ secrets.USER_AGENT }} # Uncomment if USER_AGENT is needed
         run: bundle exec ruby script/browserless_ad_check.rb
-
+        
       # Upload artifacts (response.json)
       - name: Upload artifacts (response.json)
         uses: actions/upload-artifact@v4
