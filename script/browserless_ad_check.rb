@@ -3,9 +3,10 @@ require 'json'
 require 'fileutils'
 require 'nokogiri'
 require 'uri'
+require 'dotenv'
 
+Dotenv.load
 OUTPUT_DIR = "artifacts"
-
 # Load environment variables directly from ENV (no need for Dotenv)
 domain_url = ENV['DOMAIN_URL']
 target_url = ENV['TARGET_URL']
@@ -99,12 +100,12 @@ def send_browserless_request(url, browserless_token, user_agent)
                 goto(
                   url: \"#{url}\", 
                   waitUntil: firstContentfulPaint, 
-                  timeout: 60000
+                  timeout: 100000
                 ) { status }
 
                 clickBody: click(
                   selector: \"body\",
-                  timeout: 60000,
+                  timeout: 100000,
                   visible: true
                 ) { selector x y time }
               }"
