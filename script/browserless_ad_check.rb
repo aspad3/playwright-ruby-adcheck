@@ -143,7 +143,7 @@ def save_response_to_file(response_data, url)
 end
 
 # ---------------- Run ----------------
-url = target_url.nil? ? fetch_sitemap_url(domain_url, user_agent) : target_url
+url = domain_url
 puts "INSPECT URL #{url.inspect}"
 url = url.nil? ? ENV['DOMAIN_URL'] : url
 
