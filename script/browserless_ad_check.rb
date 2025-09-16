@@ -9,17 +9,22 @@ class BrowserlessAdCheck
   OUTPUT_DIR = "artifacts"
 
   def initialize
+    # Load environment variables
     Dotenv.load
     @domain_url = ENV['DOMAIN_URL']
     @target_url = ENV['TARGET_URL']
     @browserless_token = ENV['BROWSERLESS_API_TOKEN']
-    raise "Please set BROWSERLESS_API_TOKEN" if @browserless_token.to_s.strip.empty?
-
     @user_agent = ENV.fetch(
       "USER_AGENT",
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
     )
+    
+    # Validate environment variables
+    raise "Please set BROWSERLESS_API_TOKEN in the .env file" if @browserless_token.to_s.strip.empty?
+    raise "Please set DOMAIN_URL in the .env file" if @domain_url.to_s.strip.empty?
+    raise "Please set TARGET_URL in the .env file" if @target_url.to_s.strip.empty?
 
+    # Create the output directory if it doesn't exist
     FileUtils.mkdir_p(OUTPUT_DIR)
   end
 
@@ -27,6 +32,12 @@ class BrowserlessAdCheck
     url = @target_url.nil? ? fetch_sitemap_url : @target_url
     puts "INSPECT URL #{url.inspect}"
     url = url.nil? ? ENV['DOMAIN_URL'] : url
+
+    if url.nil? || url.strip.empty?
+      puts "❌ URL is empty, skipping..."
+      return
+    end
+
     send_browserless_request(url)
     puts "🎉 Done."
   end
@@ -49,7 +60,7 @@ class BrowserlessAdCheck
 
     urls = []
 
-    # Jika sitemap berupa index
+    # If sitemap is an index, fetch sub-sitemaps
     sitemap_nodes = doc.xpath('//sitemap/loc').map(&:text)
     if sitemap_nodes.any?
       puts "📑 Found sitemap index with #{sitemap_nodes.size} sub-sitemaps"
@@ -66,14 +77,14 @@ class BrowserlessAdCheck
       sub_doc.remove_namespaces!
       urls = sub_doc.xpath('//url/loc').map(&:text)
     else
-      # Kalau langsung urlset
+      # If it's a direct URL set
       urls = doc.xpath('//url/loc').map(&:text)
     end
 
-    # Fallback khusus Blogger
+    # Fallback for Blogger URLs
     if urls.empty?
       fallback = "#{domain}/sitemap.xml?orderby=UPDATED"
-      puts "⚠️ Sitemap kosong, coba fallback: #{fallback}"
+      puts "⚠️ Sitemap empty, trying fallback: #{fallback}"
       res = Curl.get(fallback) do |c|
         c.headers['User-Agent'] = @user_agent
         c.timeout = 60
