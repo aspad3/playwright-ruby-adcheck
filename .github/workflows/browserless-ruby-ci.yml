@@ -78,8 +78,13 @@ jobs:
           DOMAIN_URL: ${{ secrets.DOMAIN_URL }}
           TARGET_URL: ${{ secrets.TARGET_URL }}
           BROWSERLESS_API_TOKEN: ${{ secrets.BROWSERLESS_API_TOKEN }}
-          USER_AGENT: ${{ secrets.USER_AGENT }} # Uncomment if USER_AGENT is needed
-        run: bundle exec ruby script/browserless_ad_check.rb
+          USER_AGENT: ${{ secrets.USER_AGENT }}
+        run: |
+          echo "DOMAIN_URL: $DOMAIN_URL"
+          echo "TARGET_URL: $TARGET_URL"
+          echo "BROWSERLESS_API_TOKEN: $BROWSERLESS_API_TOKEN"
+          echo "USER_AGENT: $USER_AGENT"
+          bundle exec ruby script/browserless_ad_check.rb
         
       # Upload artifacts (response.json)
       - name: Upload artifacts (response.json)
