@@ -100,12 +100,12 @@ def send_browserless_request(url, browserless_token, user_agent)
                 goto(
                   url: \"#{url}\", 
                   waitUntil: firstContentfulPaint, 
-                  timeout: 100000
+                  timeout: 300000
                 ) { status }
 
                 clickBody: click(
                   selector: \"body\",
-                  timeout: 100000,
+                  timeout: 300000,
                   visible: true
                 ) { selector x y time }
               }"
